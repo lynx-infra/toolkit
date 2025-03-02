@@ -16,7 +16,8 @@
         "packages/http-client"
       ],
     },
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "strictNullChecks": false
   },
   "exclude": [
     "node_modules",

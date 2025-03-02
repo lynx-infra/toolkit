@@ -52,7 +52,8 @@
     "archiver": "^7.0.1",
     "jwt-decode": "^3.1.2",
     "twirp-ts": "^2.5.0",
-    "unzip-stream": "^0.3.1"
+    "unzip-stream": "^0.3.1",
+    "@volcengine/tos-sdk": "^2.7.3"
   },
   "devDependencies": {
     "@types/archiver": "^5.3.2",

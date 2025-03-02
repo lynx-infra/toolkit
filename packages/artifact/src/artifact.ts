@@ -1,4 +1,5 @@
-import {ArtifactClient, DefaultArtifactClient} from './internal/client'
+import {ArtifactClient} from './internal/client'
+import {DefaultArtifactClient} from './internal/volc-client'
 
 export * from './internal/shared/interfaces'
 export * from './internal/shared/errors'
