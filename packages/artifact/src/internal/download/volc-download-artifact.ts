@@ -10,7 +10,7 @@ import {
 import {getGitHubWorkspaceDir} from '../shared/config'
 import {ArtifactNotFoundError} from '../shared/errors'
 import {createObjectStorageClient, handleError} from '../shared/tos-client'
-import {bucketName, objectKeyPrefix} from '../constants'
+import {bucketName, defaultObjectKeyPrefix} from '../constants'
 import {DefaultArtifactClient} from '../volc-client'
 
 async function exists(path: string): Promise<boolean> {
@@ -26,11 +26,35 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-export async function downloadArtifactInternal(
-  artifactId: number,
+export async function downloadArtifactPublic(
+  repositoryOwner: string,
+  repositoryName: string,
+  workflowRunId: number,
   options?: DownloadArtifactOptions
 ): Promise<DownloadArtifactResponse> {
   const downloadPath = await resolveOrCreateDirectory(options?.path)
+
+  const prefix = `artifacts/${repositoryOwner}/${repositoryName}/${workflowRunId}`
+  await downloadArtifactFromTOS(downloadPath, prefix, options)
+
+  return {downloadPath}
+}
+
+export async function downloadArtifactInternal(
+  options?: DownloadArtifactOptions
+): Promise<DownloadArtifactResponse> {
+  const downloadPath = await resolveOrCreateDirectory(options?.path)
+
+  await downloadArtifactFromTOS(downloadPath, defaultObjectKeyPrefix, options)
+
+  return {downloadPath}
+}
+
+async function downloadArtifactFromTOS(
+  downloadPath: string,
+  prefix: string,
+  options?: DownloadArtifactOptions
+): Promise<void> {
   const artifactClient = new DefaultArtifactClient()
   const tosClient = await createObjectStorageClient()
 
@@ -44,7 +68,7 @@ export async function downloadArtifactInternal(
 
   if (artifacts.length === 0) {
     throw new ArtifactNotFoundError(
-      `No artifacts found for ID: ${artifactId}\nAre you trying to download from a different run? Try specifying a github-token with \`actions:read\` scope.`
+      `No artifacts found for name: ${options?.artifactName}`
     )
   }
 
@@ -56,7 +80,7 @@ export async function downloadArtifactInternal(
     core.info(`Starting download of artifact to: ${downloadPath}`)
 
     const fileName = `${artifacts[0].name}.zip`
-    const objectKey = `${objectKeyPrefix}/${fileName}`
+    const objectKey = `${prefix}/${fileName}`
     const filePath = path.join(downloadPath, fileName)
     await tosClient.getObjectToFile({
       bucket: bucketName,
@@ -70,8 +94,6 @@ export async function downloadArtifactInternal(
     handleError(error)
     throw new Error(`Unable to download and extract artifact: ${error.message}`)
   }
-
-  return {downloadPath}
 }
 
 async function resolveOrCreateDirectory(

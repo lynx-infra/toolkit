@@ -1,14 +1,39 @@
 import {info} from '@actions/core'
 import {ListArtifactsResponse, Artifact} from '../shared/interfaces'
 import {createObjectStorageClient, handleError} from '../shared/tos-client'
-import {bucketName, objectKeyPrefix} from '../constants'
+import {bucketName, defaultObjectKeyPrefix} from '../constants'
 
 // Limiting to 1000 for perf reasons
 const maximumArtifactCount = 1000
 
+export async function listArtifactsPublic(
+  workflowRunId: number,
+  repositoryOwner: string,
+  repositoryName: string,
+  latest = false
+): Promise<ListArtifactsResponse> {
+  const prefix = `artifacts/${repositoryOwner}/${repositoryName}/${workflowRunId}`
+  const artifacts = await listArtifactsFromTOS(prefix, latest)
+
+  return {
+    artifacts
+  }
+}
+
 export async function listArtifactsInternal(
   latest = false
 ): Promise<ListArtifactsResponse> {
+  const artifacts = await listArtifactsFromTOS(defaultObjectKeyPrefix, latest)
+
+  return {
+    artifacts
+  }
+}
+
+export async function listArtifactsFromTOS(
+  prefix: string,
+  latest = false
+): Promise<Artifact[]> {
   const client = await createObjectStorageClient()
 
   let artifacts: Artifact[] = []
@@ -17,11 +42,11 @@ export async function listArtifactsInternal(
     const {data} = await client.listObjectsType2({
       bucket: bucketName,
       maxKeys: maximumArtifactCount,
-      prefix: objectKeyPrefix
+      prefix
     })
     for (const obj of data.Contents) {
       const artifactName = obj.Key.slice(
-        objectKeyPrefix.length + 1,
+        defaultObjectKeyPrefix.length + 1,
         obj.Key.length - 4
       )
       artifacts.push({
@@ -39,10 +64,7 @@ export async function listArtifactsInternal(
   }
 
   info(`Found ${artifacts.length} artifact(s)`)
-
-  return {
-    artifacts
-  }
+  return artifacts
 }
 
 /**

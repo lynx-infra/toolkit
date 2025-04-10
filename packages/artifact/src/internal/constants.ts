@@ -5,4 +5,4 @@ export const endpoint = process.env['ENDPOINT']
 export const region = process.env['REGION']
 export const accesskey = process.env['ACCESS_KEY']
 export const secretkey = process.env['SECRET_KEY']
-export const objectKeyPrefix = `artifacts/${repoName}/${runId}`
+export const defaultObjectKeyPrefix = `artifacts/${repoName}/${runId}`

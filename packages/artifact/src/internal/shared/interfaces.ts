@@ -101,6 +101,9 @@ export interface DownloadArtifactOptions {
    * Denotes where the artifact will be downloaded to. If not specified then the artifact is download to GITHUB_WORKSPACE
    */
   path?: string
+  /**
+   * Denotes the artifact name on TOS.
+   */
   artifactName?: string
 }
 

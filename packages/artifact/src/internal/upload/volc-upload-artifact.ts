@@ -12,7 +12,7 @@ import {
 import {createZipUploadStream} from './zip'
 import {FilesNotFoundError} from '../shared/errors'
 import {createObjectStorageClient, handleError} from '../shared/tos-client'
-import {bucketName, objectKeyPrefix} from '../constants'
+import {bucketName, defaultObjectKeyPrefix} from '../constants'
 
 export async function uploadArtifact(
   name: string,
@@ -36,7 +36,7 @@ export async function uploadArtifact(
   const client = await createObjectStorageClient()
 
   const fileName = `${name}.zip`
-  const objectKey = `${objectKeyPrefix}/${fileName}`
+  const objectKey = `${defaultObjectKeyPrefix}/${fileName}`
 
   const zipUploadStream = await createZipUploadStream(
     zipSpecification,

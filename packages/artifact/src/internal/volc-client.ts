@@ -12,10 +12,16 @@ import {
   DeleteArtifactResponse
 } from './shared/interfaces'
 import {uploadArtifact} from './upload/volc-upload-artifact'
-import {downloadArtifactInternal} from './download/volc-download-artifact'
+import {
+  downloadArtifactInternal,
+  downloadArtifactPublic
+} from './download/volc-download-artifact'
 import {deleteArtifactInternal} from './delete/delete-artifact'
-import {getArtifactInternal} from './find/volc-get-artifact'
-import {listArtifactsInternal} from './find/volc-list-artifacts'
+import {getArtifactInternal, getArtifactPublic} from './find/volc-get-artifact'
+import {
+  listArtifactsInternal,
+  listArtifactsPublic
+} from './find/volc-list-artifacts'
 
 export class DefaultArtifactClient implements ArtifactClient {
   async uploadArtifact(
@@ -44,7 +50,21 @@ If the error persists, please check whether Actions is operating normally at [ht
     options?: DownloadArtifactOptions & FindOptions
   ): Promise<DownloadArtifactResponse> {
     try {
-      return downloadArtifactInternal(artifactId, options)
+      if (options?.findBy) {
+        const {
+          findBy: {repositoryOwner, repositoryName, workflowRunId},
+          ...downloadOptions
+        } = options
+
+        return downloadArtifactPublic(
+          repositoryOwner,
+          repositoryName,
+          workflowRunId,
+          downloadOptions
+        )
+      }
+
+      return downloadArtifactInternal(options)
     } catch (error) {
       warning(
         `Download Artifact failed with error: ${error}.
@@ -62,6 +82,19 @@ If the error persists, please check whether Actions and API requests are operati
     options?: ListArtifactsOptions & FindOptions
   ): Promise<ListArtifactsResponse> {
     try {
+      if (options?.findBy) {
+        const {
+          findBy: {workflowRunId, repositoryOwner, repositoryName}
+        } = options
+
+        return listArtifactsPublic(
+          workflowRunId,
+          repositoryOwner,
+          repositoryName,
+          options?.latest
+        )
+      }
+
       return listArtifactsInternal(options?.latest)
     } catch (error: unknown) {
       warning(
@@ -81,6 +114,19 @@ If the error persists, please check whether Actions and API requests are operati
     options?: FindOptions
   ): Promise<GetArtifactResponse> {
     try {
+      if (options?.findBy) {
+        const {
+          findBy: {workflowRunId, repositoryOwner, repositoryName}
+        } = options
+
+        return getArtifactPublic(
+          artifactName,
+          workflowRunId,
+          repositoryOwner,
+          repositoryName
+        )
+      }
+
       return getArtifactInternal(artifactName)
     } catch (error: unknown) {
       warning(
